@@ -1,4 +1,4 @@
-package sbc;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,7 +28,7 @@ import org.apache.jena.vocabulary.RDFS;
  * @author Jean Paul Mosquera Arevalo
  */
 
-public class CovidRDFGen {
+public class RdfGenerator {
     //CAMBIAR POR RUTAS DEL EQUIPO DONDE SE EJECUTE
     static String FolderPath="C:/Users/Marco/Desktop/DataValidToProcess/";
     static String govData="CovidGov.csv";
@@ -140,7 +140,7 @@ public class CovidRDFGen {
          private String longitude;
          private int population;
          private float pib;
-*/
+         */
         for(Country a : countries ){
             System.out.println(a);
             String nombre=a.getName().replaceAll(" ", "_");
@@ -194,93 +194,93 @@ public class CovidRDFGen {
                     .addProperty(model.getProperty(ontoPrefix, "quantity"), String.valueOf(a.getDeath()))
                     .addProperty(schemaModel.getProperty(schema,"observationDate"), a.getDate())
                     .addProperty(gnModel.getProperty(gn,"locatedIn"), model.getProperty(uriProvince+a.getProvinceCode()));
-         }
+        }
 
-            for(GovActions a10: actions){
-                String date=a10.getFechaImplementacion().replaceAll("/", "-");
-                String codeAction=a10.getCountryCode2()+"/"+date;
-                Resource rOc5=model.createResource(uriContainmentMeasures+codeAction)
-                        //.addProperty(RDF.type, dboModel.getProperty(ontoModel, "ContaimentMeasures"))
-                        .addProperty(dboModel.getProperty(dbo,"name"), a10.getMedida())
-                        .addProperty(dboModel.getProperty(dbo,"date"), a10.getFechaImplementacion())
-                        .addProperty(dboModel.getProperty(dbo,"description"), a10.getCategoria())
-                        .addProperty(gnModel.getProperty(gn,"locatedIn"), model.getProperty(uriCountry,a10.getCountryCode2()));
+        for(GovActions a10: actions){
+            String date=a10.getFechaImplementacion().replaceAll("/", "-");
+            String codeAction=a10.getCountryCode2()+"/"+date;
+            Resource rOc5=model.createResource(uriContainmentMeasures+codeAction)
+                    //.addProperty(RDF.type, dboModel.getProperty(ontoModel, "ContaimentMeasures"))
+                    .addProperty(dboModel.getProperty(dbo,"name"), a10.getMedida())
+                    .addProperty(dboModel.getProperty(dbo,"date"), a10.getFechaImplementacion())
+                    .addProperty(dboModel.getProperty(dbo,"description"), a10.getCategoria())
+                    .addProperty(gnModel.getProperty(gn,"locatedIn"), model.getProperty(uriCountry,a10.getCountryCode2()));
+        }
+        //   .addProperty(dboModel.getProperty(dbo,"country"), dbrModel.getProperty(dbr,a.get));
+
+
+
+        for(covidTests a20 : tests ){
+            String date=a20.getDate().replaceAll("/", "-");
+            String codeTest=a20.getCountryCode2()+"/"+date;
+            Resource rOc20=model.createResource(uriTests+codeTest)
+                    //.addProperty(RDF.type, dboModel.getProperty(ontoModel, "ContaimentMeasures"))
+                    .addProperty(ontoModel.getProperty(ontoPrefix,"realized"), a20.getTotalTests())
+                    .addProperty(schemaModel.getProperty(schema,"observationDate"), a20.getDate())
+                    .addProperty(ovModel.getProperty(ov,"madeIn"), model.getProperty(uriCountry,a20.getCountryCode2()));
+        }
+
+        for(PatientData a40 : patient ){
+            String codigo="CO/"+a40.getIdCase();
+            if(a40.getFechamuerte()!=""){
+                Resource rOc60=model.createResource(uriMedicalInformation+codigo)
+                        .addProperty(ontoModel.getProperty(ontoPrefix, "date_first_symptom"), a40.getDateNotification())
+                        .addProperty(dboModel.getProperty(dbo,"deathDate"), a40.getFechamuerte())
+                        .addProperty(dboModel.getProperty(dbo,"currentStatus"), a40.getEstado());
+            }else{
+                Resource rOc60=model.createResource(uriMedicalInformation+codigo)
+                        .addProperty(ontoModel.getProperty(ontoPrefix, "date_first_symptom"), a40.getDateNotification())
+                        .addProperty(dboModel.getProperty(dbo,"currentStatus"), a40.getEstado());
             }
-            //   .addProperty(dboModel.getProperty(dbo,"country"), dbrModel.getProperty(dbr,a.get));
+            Resource rPatient=model.createResource(uriPatient+codigo)
+                    .addProperty(RDF.type,FOAF.Person)
+                    .addProperty(FOAF.age, String.valueOf(a40.getEdad()))
+                    .addProperty(FOAF.gender, a40.getGenero())
+                    .addProperty(dboModel.getProperty(dbo,"place"), model.getProperty(uriCountry,"CO"))
+                    .addProperty(ontoModel.getProperty(ontoPrefix,"hasData"), model.getProperty(uriMedicalInformation,codigo));
+
+            Resource rCase=model.createResource(uriCaseCovid+codigo)
+                    .addProperty(ontoModel.getProperty(ontoPrefix,"confirmationDate"), a40.getFechaDiagnostico())
+                    .addProperty(ontoModel.getProperty(ontoPrefix,"hasData"), model.getProperty(uriPatient,codigo))
+                    .addProperty(gnModel.getProperty(gn,"locatedIn"), model.getProperty(uriCountry,"CO"));
 
 
-
-            for(covidTests a20 : tests ){
-                String date=a20.getDate().replaceAll("/", "-");
-                String codeTest=a20.getCountryCode2()+"/"+date;
-                Resource rOc20=model.createResource(uriTests+codeTest)
-                        //.addProperty(RDF.type, dboModel.getProperty(ontoModel, "ContaimentMeasures"))
-                        .addProperty(ontoModel.getProperty(ontoPrefix,"realized"), a20.getTotalTests())
-                        .addProperty(schemaModel.getProperty(schema,"observationDate"), a20.getDate())
-                        .addProperty(ovModel.getProperty(ov,"madeIn"), model.getProperty(uriCountry,a20.getCountryCode2()));
-            }
-
-            for(PatientData a40 : patient ){
-                String codigo="CO/"+a40.getIdCase();
-                if(a40.getFechamuerte()!=""){
-                    Resource rOc60=model.createResource(uriMedicalInformation+codigo)
-                            .addProperty(ontoModel.getProperty(ontoPrefix, "date_first_symptom"), a40.getDateNotification())
-                            .addProperty(dboModel.getProperty(dbo,"deathDate"), a40.getFechamuerte())
-                            .addProperty(dboModel.getProperty(dbo,"currentStatus"), a40.getEstado());
-                }else{
-                    Resource rOc60=model.createResource(uriMedicalInformation+codigo)
-                            .addProperty(ontoModel.getProperty(ontoPrefix, "date_first_symptom"), a40.getDateNotification())
-                            .addProperty(dboModel.getProperty(dbo,"currentStatus"), a40.getEstado());
-                }
-                Resource rPatient=model.createResource(uriPatient+codigo)
-                        .addProperty(RDF.type,FOAF.Person)
-                        .addProperty(FOAF.age, String.valueOf(a40.getEdad()))
-                        .addProperty(FOAF.gender, a40.getGenero())
-                        .addProperty(dboModel.getProperty(dbo,"place"), model.getProperty(uriCountry,"CO"))
-                        .addProperty(ontoModel.getProperty(ontoPrefix,"hasData"), model.getProperty(uriMedicalInformation,codigo));
-
-                Resource rCase=model.createResource(uriCaseCovid+codigo)
-                        .addProperty(ontoModel.getProperty(ontoPrefix,"confirmationDate"), a40.getFechaDiagnostico())
-                        .addProperty(ontoModel.getProperty(ontoPrefix,"hasData"), model.getProperty(uriPatient,codigo))
-                        .addProperty(gnModel.getProperty(gn,"locatedIn"), model.getProperty(uriCountry,"CO"));
-
-
-            }
+        }
 /**
  * Reading the Generated data in Triples Format and RDF
  */
-            StmtIterator iter = model.listStatements();
-            System.out.println("TRIPLES");
-            while (iter.hasNext()) {
-                Statement stmt      = iter.nextStatement();  // get next statement
-                Resource  subject   = stmt.getSubject();     // get the subject
-                Property  predicate = stmt.getPredicate();   // get the predicate
-                RDFNode   object    = stmt.getObject();      // get the object
+        StmtIterator iter = model.listStatements();
+        System.out.println("TRIPLES");
+        while (iter.hasNext()) {
+            Statement stmt      = iter.nextStatement();  // get next statement
+            Resource  subject   = stmt.getSubject();     // get the subject
+            Property  predicate = stmt.getPredicate();   // get the predicate
+            RDFNode   object    = stmt.getObject();      // get the object
 
-                System.out.print(subject.toString());
-                System.out.print(" " + predicate.toString() + " ");
-                if (object instanceof Resource) {
-                    System.out.print(object.toString());
-                } else {
-                    // object is a literal
-                    System.out.print(" \"" + object.toString() + "\"");
-                }
-
-                System.out.println(" .");
+            System.out.print(subject.toString());
+            System.out.print(" " + predicate.toString() + " ");
+            if (object instanceof Resource) {
+                System.out.print(object.toString());
+            } else {
+                // object is a literal
+                System.out.print(" \"" + object.toString() + "\"");
             }
-            // now write the model in XML form to a file
-            System.out.println("MODELO RDF------");
-            model.write(System.out, "RDF/XML-ABBREV");
 
-            // Save to a file
-            RDFWriter writer = model.getWriter("RDF/XML");
-            writer.write(model,os, "");
-
-            //Close models
-            dboModel.close();
-            model.close();
-
+            System.out.println(" .");
         }
+        // now write the model in XML form to a file
+        System.out.println("MODELO RDF------");
+        model.write(System.out, "RDF/XML-ABBREV");
+
+        // Save to a file
+        RDFWriter writer = model.getWriter("RDF/XML");
+        writer.write(model,os, "");
+
+        //Close models
+        dboModel.close();
+        model.close();
+
+    }
 
     private static List<Country> readCountriesFromCSV(String fileName) {
         List<Country> persons = new ArrayList<>();

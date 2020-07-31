@@ -1,1 +1,1 @@
-# Rdf-Data
+# RdfGenerator-Data
